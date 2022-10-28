@@ -1,0 +1,17 @@
+.myDiv {
+    background-color: white; 
+    height: 600px;
+    width: 400px;
+    position: fixed;
+    right: 10px; 
+    bottom: 10px;
+    padding: 20px;
+   }
+body{
+    background-color:skyblue ;
+}
+#accident {
+    width: 200px;
+    margin: 10px;
+    font-size: large;
+}

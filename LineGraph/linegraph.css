@@ -1,0 +1,13 @@
+img{
+    height: 800px;
+    width: 1000px;
+    position: fixed;
+    right: 10px; 
+    top: 10px;
+    padding: 20px;
+}
+p{
+    height: 800px;
+    width: 600px;
+    font-size:x-large;
+}
