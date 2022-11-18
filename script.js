@@ -470,4 +470,91 @@ d3.csv("accidents_2005_to_2007.csv", function(error, data) {
     //   });
   
 //     return svg.node();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Linechart
+
+
+
+d3.csv("accidents_2005_to_2007.csv",function(data) {
+
+    var dimensions={
+      width:800,
+      height:800,
+      margin:{
+        top: 10,
+        bottom: 50,
+        right: 10,
+        left: 50
+    }
+  }
+  
+  var svg = d3.select("#Line")
+        .attr("width", dimensions.width)
+        .attr("height", dimensions.height);
+     
+             
+  var databyyear = d3.nest()
+            .key(function(d) { return d.Year;})
+            .rollup(function(d) { 
+                  return d3.sum(d, function(g) {return g.Number_of_Casualties; });
+                  })
+            .sortKeys(d3.ascending)
+            .entries(data);
+      console.log(databyyear)
+  
+  
+  var keys = d3.map(data, function(d){return(d.Year)}).keys()
+  
+  var xScale = d3.scaleBand()
+     .domain(keys)
+     .range([dimensions.margin.left,dimensions.width-dimensions.margin.right])
+    
+  var maxSum = d3.max(databyyear, function(d){
+               return +d.value;
+               })
+    console.log(maxSum)
+    
+    
+  var yScale = d3.scaleLinear()
+      .domain([0,maxSum])
+      .range([dimensions.height-dimensions.margin.bottom,dimensions.margin.top]);
+    
+  
+  var xAxisGen = d3.axisBottom().scale(xScale)
+  var xAxis = svg.append("g")
+      .call(xAxisGen)
+      .style("transform", `translateY(${dimensions.height-dimensions.margin.bottom}px)`)
+  
+  var yAxisGen = d3.axisLeft().scale(yScale)
+  var yAxis = svg.append("g")
+      .call(yAxisGen)
+      .style("transform", `translateX(${dimensions.margin.left}px)`)
+  
+  svg.append("path")
+      .datum(databyyear)
+      .attr("fill","red")
+      .attr("stroke", "red")
+      .attr("stroke-width", 15)
+      .attr("d", d3.line()
+        .x(function(d) { return xScale(d.key) })
+        .y(function(d) { return yScale(d.value) })
+        )
+  })
  
