@@ -1,4 +1,4 @@
-
+d3.csv("accidents_2005_to_2007.csv", function(error, data) {
 
 d3.json("uk.json", function(error, uk) {
     var width = 960,
@@ -25,7 +25,10 @@ var svg = d3.select("#geometry")
         .datum(subunits)
         .attr("d", path);
     
-    d3.csv("Accidents_2005.csv", function(error, data) {
+   
+        years = d3.extent(data, d => d.Year)
+        dataInitial = data.filter(d => d.Year === years[0])
+        console.log(dataInitial)
    
         var keys = d3.map(data, function(d){return(d.Accident_Severity)}).keys()
         
@@ -61,7 +64,7 @@ var svg = d3.select("#geometry")
                     .attr("d", path.projection(projection));   });
                     svg.call(zoom)
 
-            })
+           
 
     function update(selectedOption,Accident_year){
         d3.csv(Accident_year, function(error, data) {
@@ -211,26 +214,164 @@ var svg = d3.select("#geometry")
 
 
 
-        d3.select("#accident").on("change", function(d) {
-            // recover the option that has been chosen
-            var selectedOption = d3.select(this).property("value")
-            // run the updateChart function with this selected option
-           
-            if(selectedOption==2006){
-                 update(selectedOption,"Accidents_2006.csv")
-           console.log(selectedOption)
-                 
-        }
-        if(selectedOption==2005){
-        update(selectedOption,"Accidents_2005.csv")
-        console.log(selectedOption)
-        }
-        if(selectedOption==2007){
-        update(selectedOption,"Accidents_2007.csv")
-        }
-        })
 
-});
+// On click Listener
+
+    d3.select("#accident").on("change", function(d) {
+        // recover the option that has been chosen
+        var selectedOption = d3.select(this).property("value")
+        // run the updateChart function with this selected option
+       
+        if(selectedOption==2006){
+             update(selectedOption,"Accidents_2006.csv")
+       console.log(selectedOption)
+
+
+     // Barchart onclick listner for 2006 year
+     var maxSum=d3.max(data, function(d) { return d.Casualities_2006; } );
+     yScale.domain([
+                   0,maxSum
+               ])
+                
+     var yAxis = d3.axisLeft(yScale);
+     
+     changing_axis.transition().duration(1000).call(yAxis);
+     
+     bars.transition() 
+         .attr("x", function(d) { return xScale(d.Day_week); })
+         .attr("y", function(d) { return yScale(d.Casualities_2006); })
+         .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2006); })
+         .attr("width", d => xScale.bandwidth())
+         .attr("fill", "steelblue")
+             
+    }
+    if(selectedOption==2005){
+    update(selectedOption,"Accidents_2005.csv")
+    console.log(selectedOption)
+
+   
+    }
+    if(selectedOption==2007){
+    update(selectedOption,"Accidents_2007.csv")
+
+
+     //Barchart onclick listner for 2007 year
+
+     var maxSum=d3.max(data, function(d) { return d.Casualities_2007; } );
+     yScale.domain([
+                   0,maxSum
+               ])
+                
+     var yAxis = d3.axisLeft(yScale);
+     
+     changing_axis.transition().duration(1000).call(yAxis);
+     
+     bars.transition() 
+         .attr("x", function(d) { return xScale(d.Day_week); })
+         .attr("y", function(d) { return yScale(d.Casualities_2007); })
+         .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2007); })
+         .attr("width", d => xScale.bandwidth())
+         .attr("fill", "steelblue")
+    }
+    })
+
+      
+    
+
+
+
+
+//BarChart
+
+var dimensions={
+    width:800,
+    height:800,
+    margin:{
+      top: 10,
+      bottom: 50,
+      right: 10,
+      left: 50
+  }
+}
+var nameSelected = "Casualities_2005";
+var svg1 = d3.select("#barchart")
+        .attr("width", dimensions.width)
+        .attr("height", dimensions.height);
+
+
+var keys = d3.map(data, function(d){return(d.Day_of_Week)}).keys()
+
+console.log(keys)
+
+var xScale = d3.scaleBand()
+.domain(
+    data.map(function (d) {
+      return d.Day_week;
+    })
+  )
+              .range([dimensions.margin.left,dimensions.width-dimensions.margin.right])
+              .padding([0.2])
+
+
+var maxSum=d3.max(data, function(d) { return d[nameSelected]; } );
+
+var yScale = d3.scaleLinear()
+.domain([
+    0,maxSum
+])
+              .range([dimensions.height-dimensions.margin.bottom,dimensions.margin.top]);
+
+
+
+  var text = svg1
+            .append("text")
+            .attr("id", "topbartext")
+            .attr("x", 320)
+            .attr("y", 20)
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("font-family", "sans-serif")
+            .text("Number of Casuality based on day of week");
+
+
+  var bars=svg1.append("g")
+              .selectAll("g")
+              .data(data)
+              
+              .enter()
+              .append("rect")
+              .attr("x", function(d) { return xScale(d.Day_week); })
+              .attr("y", function(d) { return yScale(d[nameSelected]); })
+              .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d[nameSelected]) })
+              .attr("width", d => xScale.bandwidth())
+              .attr("fill", "steelblue")
+              .on("mouseover", function (d, i) {
+                d3.select(this).attr("stroke-width", 2).attr("stroke", "red");
+                text.transition().text("Count per day: " + i[nameSelected]);
+              })
+              .on("mouseout", function (d) {
+                d3.select(this).attr("stroke-width", "0");
+              });
+
+
+
+  var xAxisGen = d3.axisBottom().scale(xScale)
+  var xAxis = svg1.append("g")
+                  .call(xAxisGen)
+                  .style("transform", `translateY(${dimensions.height-dimensions.margin.bottom}px)`)
+                  
+
+  
+  var yAxis =  d3.axisLeft(yScale);
+
+  var changing_axis = svg1.append("g")
+                  .style("transform", `translateX(${dimensions.margin.left}px)`)
+                  .call(yAxis)
+
+
+    })  // uk.json ends
+
+}); // accidents_2005_to_2007.csv ends
 
 
 
@@ -245,90 +386,7 @@ var svg = d3.select("#geometry")
 // BarChart 
 
 d3.csv("accidents_2005_to_2007.csv", function(error, data) {
-    var dimensions={
-        width:800,
-        height:800,
-        margin:{
-          top: 10,
-          bottom: 50,
-          right: 10,
-          left: 50
-      }
-    }
-    var nameSelected = "Casualities_2005";
-    var svg = d3.select("#barchart")
-            .attr("width", dimensions.width)
-            .attr("height", dimensions.height);
-
-
-    var keys = d3.map(data, function(d){return(d.Day_of_Week)}).keys()
-    
-    console.log(keys)
-
-    var xScale = d3.scaleBand()
-    .domain(
-        data.map(function (d) {
-          return d.Day_week;
-        })
-      )
-                  .range([dimensions.margin.left,dimensions.width-dimensions.margin.right])
-                  .padding([0.2])
-
    
-    var maxSum=d3.max(data, function(d) { return d[nameSelected]; } );
-
-    var yScale = d3.scaleLinear()
-    .domain([
-        0,maxSum
-    ])
-                  .range([dimensions.height-dimensions.margin.bottom,dimensions.margin.top]);
-
-  
-
-      var text = svg
-                .append("text")
-                .attr("id", "topbartext")
-                .attr("x", 320)
-                .attr("y", 20)
-                .attr("dx", "-.8em")
-                .attr("dy", ".15em")
-                .attr("font-family", "sans-serif")
-                .text("Number of Casuality based on day of week");
-
-    
-      var bars=svg.append("g")
-                  .selectAll("g")
-                  .data(data)
-                  
-                  .enter()
-                  .append("rect")
-                  .attr("x", function(d) { return xScale(d.Day_week); })
-                  .attr("y", function(d) { return yScale(d[nameSelected]); })
-                  .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d[nameSelected]) })
-                  .attr("width", d => xScale.bandwidth())
-                  .attr("fill", "steelblue")
-                  .on("mouseover", function (d, i) {
-                    d3.select(this).attr("stroke-width", 2).attr("stroke", "red");
-                    text.transition().text("Count per day: " + i[nameSelected]);
-                  })
-                  .on("mouseout", function (d) {
-                    d3.select(this).attr("stroke-width", "0");
-                  });
-
-
-
-      var xAxisGen = d3.axisBottom().scale(xScale)
-      var xAxis = svg.append("g")
-                      .call(xAxisGen)
-                      .style("transform", `translateY(${dimensions.height-dimensions.margin.bottom}px)`)
-                      
-
-      
-      var yAxis =  d3.axisLeft(yScale);
-
-      var changing_axis = svg.append("g")
-                      .style("transform", `translateX(${dimensions.margin.left}px)`)
-                      .call(yAxis)
      
   
     
@@ -343,42 +401,14 @@ d3.csv("accidents_2005_to_2007.csv", function(error, data) {
     //       if(nameSelected=="2006"){
 
     
-    //  var maxSum=d3.max(data, function(d) { return d.Casualities_2006; } );
-    //   yScale.domain([
-    //                 0,maxSum
-    //             ])
-                 
-    //   var yAxis = d3.axisLeft(yScale);
-      
-    //   changing_axis.transition().duration(1000).call(yAxis);
-      
-    //   bars.transition() 
-    //       .attr("x", function(d) { return xScale(d.Day_week); })
-    //       .attr("y", function(d) { return yScale(d.Casualities_2006); })
-    //       .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2006); })
-    //       .attr("width", d => xScale.bandwidth())
-    //       .attr("fill", "steelblue")
+  
     //               }
                 
 
     //               if(nameSelected=="2007"){
 
     
-    //                 var maxSum=d3.max(data, function(d) { return d.Casualities_2007; } );
-    //                  yScale.domain([
-    //                                0,maxSum
-    //                            ])
-                                
-    //                  var yAxis = d3.axisLeft(yScale);
-                     
-    //                  changing_axis.transition().duration(1000).call(yAxis);
-                     
-    //                  bars.transition() 
-    //                      .attr("x", function(d) { return xScale(d.Day_week); })
-    //                      .attr("y", function(d) { return yScale(d.Casualities_2007); })
-    //                      .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2007); })
-    //                      .attr("width", d => xScale.bandwidth())
-    //                      .attr("fill", "steelblue")
+   
     //                              }
     //             });
 
