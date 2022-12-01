@@ -26,22 +26,26 @@ var svg = d3.select("#geometry")
         .attr("d", path);
     
    
-        years = d3.extent(data, d => d.Year)
-        dataInitial = data.filter(d => d.Year === years[0])
+        // years = d3.extent(data, d => d.Year)
+        // dataInitial = data.filter(d => d.Year === years[0])
+        dataInitial = data.filter(function(d) {
+            
+            return d.Year < 2006;
+          })
         console.log(dataInitial)
    
-        var keys = d3.map(data, function(d){return(d.Accident_Severity)}).keys()
+        var keys = d3.map(dataInitial, function(d){return(d.Accident_Severity)}).keys()
         
   
        
         var colorScale = d3.scale.ordinal()
                         .domain(keys)
-                        .range(["	#9FE2BFF","	#009E60","#00FF7F"])
+                        .range(["#9FE2BFF","#009E60","#00FF7F"])
         
 
 
         var geometry = svg.selectAll("circle")
-            .data(data)
+            .data(dataInitial)
             .enter()
             .append("circle")
             .attr("cx", function(d) {
@@ -238,7 +242,7 @@ var svg = d3.select("#geometry")
      changing_axis.transition().duration(1000).call(yAxis);
      
      bars.transition() 
-         .attr("x", function(d) { return xScale(d.Day_week); })
+         .attr("x", function(d) { return xScale(d.Days); })
          .attr("y", function(d) { return yScale(d.Casualities_2006); })
          .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2006); })
          .attr("width", d => xScale.bandwidth())
@@ -248,6 +252,26 @@ var svg = d3.select("#geometry")
     if(selectedOption==2005){
     update(selectedOption,"Accidents_2005.csv")
     console.log(selectedOption)
+
+    //Barchart onClick Listner for 2005 Year
+
+
+     // Barchart onclick listner for 2006 year
+     var maxSum=d3.max(data, function(d) { return d.Casualities_2005; } );
+     yScale.domain([
+                   0,maxSum
+               ])
+                
+     var yAxis = d3.axisLeft(yScale);
+     
+     changing_axis.transition().duration(1000).call(yAxis);
+     
+     bars.transition() 
+         .attr("x", function(d) { return xScale(d.Days); })
+         .attr("y", function(d) { return yScale(d.Casualities_2005); })
+         .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2005); })
+         .attr("width", d => xScale.bandwidth())
+         .attr("fill", "steelblue")
 
    
     }
@@ -267,7 +291,7 @@ var svg = d3.select("#geometry")
      changing_axis.transition().duration(1000).call(yAxis);
      
      bars.transition() 
-         .attr("x", function(d) { return xScale(d.Day_week); })
+         .attr("x", function(d) { return xScale(d.Days); })
          .attr("y", function(d) { return yScale(d.Casualities_2007); })
          .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2007); })
          .attr("width", d => xScale.bandwidth())
@@ -299,14 +323,14 @@ var svg1 = d3.select("#barchart")
         .attr("height", dimensions.height);
 
 
-var keys = d3.map(data, function(d){return(d.Day_of_Week)}).keys()
+//var keys = d3.map(data, function(d){return(d.Day_week)}).keys()
 
-console.log(keys)
+
 
 var xScale = d3.scaleBand()
 .domain(
     data.map(function (d) {
-      return d.Day_week;
+      return d.Days;
     })
   )
               .range([dimensions.margin.left,dimensions.width-dimensions.margin.right])
@@ -340,7 +364,7 @@ var yScale = d3.scaleLinear()
               
               .enter()
               .append("rect")
-              .attr("x", function(d) { return xScale(d.Day_week); })
+              .attr("x", function(d) { return xScale(d.Days); })
               .attr("y", function(d) { return yScale(d[nameSelected]); })
               .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d[nameSelected]) })
               .attr("width", d => xScale.bandwidth())
@@ -372,47 +396,6 @@ var yScale = d3.scaleLinear()
     })  // uk.json ends
 
 }); // accidents_2005_to_2007.csv ends
-
-
-
-
-
-
-
-
-
-
-
-// BarChart 
-
-d3.csv("accidents_2005_to_2007.csv", function(error, data) {
-   
-     
-  
-    
-  
-   
-
-
-    //   d3.select("#accident").on("change", function () {
-
-    //       nameSelected = d3.select(this).property("value");
-
-    //       if(nameSelected=="2006"){
-
-    
-  
-    //               }
-                
-
-    //               if(nameSelected=="2007"){
-
-    
-   
-    //                              }
-    //             });
-
-            })
 
 
 
