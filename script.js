@@ -1,8 +1,11 @@
 d3.csv("accidents_2005_to_2007.csv", function(error, data) {
 
 d3.json("uk.json", function(error, uk) {
+    console.log(uk)
     var width = 960,
     height = 1050;
+
+    var markerLayer;
 
 var svg = d3.select("#geometry")
             .attr("width", width)
@@ -36,12 +39,45 @@ var svg = d3.select("#geometry")
    
         var keys = d3.map(dataInitial, function(d){return(d.Accident_Severity)}).keys()
         
-  
+  console.log(d3.map(dataInitial, function(d){return(d.Accident_Severity)}))
        
         var colorScale = d3.scale.ordinal()
                         .domain(keys)
                         .range(["#9FE2BFF","#009E60","#00FF7F"])
         
+
+     var Tooltip = d3.select('body')
+     .append('div')
+     .attr('id', 'tooltip')
+     .attr('style', 'position: absolute; opacity: 0;')
+                .style("background-color", "white")
+                .style("border", "solid")
+                .style("border-width", "2px")
+                .style("border-radius", "5px")
+               
+
+  // Three function that change the tooltip when user hover / move / leave a cell
+  var mouseover = function(d) {
+                Tooltip
+                .style("opacity", 1)
+                d3.select(this)
+                .style("stroke", "black")
+                .style("opacity", 1)
+  }
+  var mousemove = function(d) {
+                Tooltip
+                .html("Longitude-"+d.Longitude+"<br> Latitude-"+d.Latitude+"<br> Accident Severity-"+d.Accident_Severity+"<br> Number of Vehicles-"+d.Number_of_Vehicles+
+                "<br>Number of Casualties-"+d.Number_of_Casualties+"<br> Date-"+d.Date+"<br> Day of Week-"+d.Day_of_Week+"<br>Time-"+d.Time)
+                .style("left", (d3.mouse(this)[0]+70) + "px")
+                .style("top", (d3.mouse(this)[1]) + "px")
+  }
+  var mouseleave = function(d) {
+                Tooltip
+                    .style("opacity", 0)
+                d3.select(this)
+                    .style("stroke", "none")
+                    .style("opacity", 0.8)
+  }
 
 
         var geometry = svg.selectAll("circle")
@@ -54,10 +90,19 @@ var svg = d3.select("#geometry")
             .attr("cy", function(d) {
                     return projection([d.Longitude, d.Latitude])[1];
             })
+            .style("stroke", "none")
+      .style("opacity", 0.8)
+            .on("mouseover", mouseover)
+            .on("mousemove", mousemove)
+            .on("mouseleave", mouseleave)
             .attr("r", 2)
             
-            .attr("fill", function(d){return colorScale(d.Accident_Severity)})
+            .style("fill", function(d){return colorScale(d.Accident_Severity)})
+            .style("stroke-width", 5)
+           
+      
         
+            
             var zoom = d3.behavior.zoom()
             .on("zoom",function() {
                 svg.attr("transform","translate("+ 
@@ -68,7 +113,6 @@ var svg = d3.select("#geometry")
                     .attr("d", path.projection(projection));   });
                     svg.call(zoom)
 
-           
 
     function update(selectedOption,Accident_year){
         d3.csv(Accident_year, function(error, data) {
@@ -83,6 +127,39 @@ var svg = d3.select("#geometry")
                 
         
         
+     var Tooltip = d3.select('body')
+     .append('div')
+     .attr('id', 'tooltip')
+     .attr('style', 'position: absolute; opacity: 0;')
+                .style("background-color", "white")
+                .style("border", "solid")
+                .style("border-width", "2px")
+                .style("border-radius", "5px")
+               
+
+  // Three function that change the tooltip when user hover / move / leave a cell
+  var mouseover = function(d) {
+                Tooltip
+                .style("opacity", 1)
+                d3.select(this)
+                .style("stroke", "black")
+                .style("opacity", 1)
+  }
+  var mousemove = function(d) {
+                Tooltip
+                .html("Longitude-"+d.Longitude+"<br> Latitude-"+d.Latitude+"<br> Accident Severity-"+d.Accident_Severity+"<br> Number of Vehicles-"+d.Number_of_Vehicles+
+                "<br>Number of Casualties-"+d.Number_of_Casualties+"<br> Date-"+d.Date+"<br> Day of Week-"+d.Day_of_Week+"<br>Time-"+d.Time)
+                .style("left", (d3.mouse(this)[0]+70) + "px")
+                .style("top", (d3.mouse(this)[1]) + "px")
+  }
+  var mouseleave = function(d) {
+                Tooltip
+                    .style("opacity", 0)
+                d3.select(this)
+                    .style("stroke", "none")
+                    .style("opacity", 0.8)
+  }
+
                 var geometry = svg.selectAll("circle")
                     .data(data)
                     .enter()
@@ -93,6 +170,11 @@ var svg = d3.select("#geometry")
                     .attr("cy", function(d) {
                             return projection([d.Longitude, d.Latitude])[1];
                     })
+                    .style("stroke", "none")
+      .style("opacity", 0.8)
+            .on("mouseover", mouseover)
+            .on("mousemove", mousemove)
+            .on("mouseleave", mouseleave)
                     .attr("r", 2)
                     
                     .attr("fill", function(d){return colorScale(d.Accident_Severity)})
@@ -308,8 +390,8 @@ var svg = d3.select("#geometry")
 //BarChart
 
 var dimensions={
-    width:800,
-    height:800,
+    width:500,
+    height:500,
     margin:{
       top: 10,
       bottom: 50,
@@ -323,13 +405,13 @@ var svg1 = d3.select("#barchart")
         .attr("height", dimensions.height);
 
 
-//var keys = d3.map(data, function(d){return(d.Day_week)}).keys()
+var keys = d3.map(data, function(d){return(d.Day_week)}).keys()
 
-
-
+console.log(keys)
+var bar_data =  data.filter(function(d){ return d.Days != "" })
 var xScale = d3.scaleBand()
 .domain(
-    data.map(function (d) {
+    bar_data.map(function (d) {
       return d.Days;
     })
   )
@@ -370,11 +452,11 @@ var yScale = d3.scaleLinear()
               .attr("width", d => xScale.bandwidth())
               .attr("fill", "steelblue")
               .on("mouseover", function (d, i) {
-                d3.select(this).attr("stroke-width", 2).attr("stroke", "red");
-                text.transition().text("Count per day: " + i[nameSelected]);
+                d3.select(this).attr("stroke-width", 2).attr("fill", "red");
+               
               })
               .on("mouseout", function (d) {
-                d3.select(this).attr("stroke-width", "0");
+                d3.select(this).attr("stroke-width", "0").attr("fill","steelblue");
               });
 
 
@@ -393,6 +475,69 @@ var yScale = d3.scaleLinear()
                   .call(yAxis)
 
 
+
+//Piechart
+
+    var pie_data =  data.filter(function(d){ return d.Days != "" })
+//     console.log(pie_data)
+//    Casualities_2005= pie_data.map(function (d) {
+//         return d.Casualities_2005;
+//       })
+      
+// Days=pie_data.map(function (d) {
+//     return d.Days;
+//   })
+  data_2005=pie_data.map(function (d) {
+    return{
+    Days:d.Days,
+    Casualities_2005:d.Casualities_2005
+}})
+  console.log(data_2005)
+  var text = "";
+
+  var width_pie = 500;
+  var height_pie = 500;
+  var thickness_pie = 40;
+  var duration = 750;
+
+  var radius = Math.min(width_pie, height_pie) / 2;
+  var color = d3.scaleOrdinal()
+                .domain(data_2005.map(function (d) {
+                    return d.Days;
+                  }))
+                .range(["#FFBF00", "#FF7F50", "#6495ED", "#008000", "#DE3163","#DE3134","Ef32455"]);
+
+
+    var svg3 = d3.select("#Line")
+        .attr("width", width_pie)
+        .attr("height", height_pie)
+    .append("g")
+        .attr("transform", "translate(" + width_pie / 2 + "," + height_pie / 2 + ")");
+
+  
+              var pie = d3.pie()
+              .value(function(d) {return d.Casualities_2005; })
+              .sort(function(a, b) { return d3.ascending(a.Days, b.Days);} ) // This make sure that group order remains the same in the pie chart
+            var data_ready = pie(d3.entries(data_2005))
+          
+            // map to data
+            var u = svg3.selectAll("path1")
+              .data(data_ready)
+          
+            // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+            u
+              .enter()
+              .append('path1')
+              .merge(u)
+              .attr('d', d3.arc()
+                .innerRadius(0)
+                .outerRadius(radius)
+              )
+              .attr('fill', function(d){ return(color(d.Days)) })
+              .attr("stroke", "white")
+              .style("stroke-width", "2px")
+              .style("opacity", 1)
+          
     })  // uk.json ends
 
 }); // accidents_2005_to_2007.csv ends
@@ -408,7 +553,18 @@ var yScale = d3.scaleLinear()
 
 
 
+
+
+
+
+
+
+
+
 // //Linechart
+
+
+
 
 
 // var dimensions={

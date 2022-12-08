@@ -3,8 +3,8 @@
     height: 600px;
     width: 400px;
     position: fixed;
-    right: 10px; 
-    bottom: 10px;
+    right: 100px; 
+    top: 0px;
     padding: 20px;
    }
 
@@ -41,3 +41,4 @@
     stroke-width: 0.01em;
     fill: #e1eddf;
   }
+  
