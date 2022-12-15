@@ -1,13 +1,14 @@
+
 d3.csv("accidents_2005_to_2007.csv", function(error, data) {
 
 d3.json("uk.json", function(error, uk) {
-    console.log(uk)
+
     var width = 960,
     height = 1050;
 
     var markerLayer;
 
-var svg = d3.select("#geometry")
+    var svg = d3.select("#geometry")
             .attr("width", width)
             .attr("height", height);
     if (error) return console.error(error);
@@ -20,40 +21,126 @@ var svg = d3.select("#geometry")
                         .parallels([50, 60])
                         .scale(6000)
                         .translate([width / 2, height / 2]);
+
+    const initialScale = projection.scale();
                         
     var path = d3.geo.path()
                     .projection(projection);
 
     svg.append("path")
         .datum(subunits)
-        .attr("d", path);
+        .attr("d", path)
+        .attr("class", "areas");
+    
     
    
-        // years = d3.extent(data, d => d.Year)
-        // dataInitial = data.filter(d => d.Year === years[0])
-        dataInitial = data.filter(function(d) {
-            
-            return d.Year < 2006;
-          })
-        console.log(dataInitial)
-   
-        var keys = d3.map(dataInitial, function(d){return(d.Accident_Severity)}).keys()
+    // years = d3.extent(data, d => d.Year)
+    // dataInitial = data.filter(d => d.Year === years[0])
+    dataInitial = data.filter(function(d) {
         
-  console.log(d3.map(dataInitial, function(d){return(d.Accident_Severity)}))
-       
-        var colorScale = d3.scale.ordinal()
-                        .domain(keys)
-                        .range(["#9FE2BFF","#009E60","#00FF7F"])
-        
+        return d.Year < 2006;
+        })
 
-     var Tooltip = d3.select('body')
-     .append('div')
-     .attr('id', 'tooltip')
-     .attr('style', 'position: absolute; opacity: 0;')
-                .style("background-color", "white")
-                .style("border", "solid")
-                .style("border-width", "2px")
-                .style("border-radius", "5px")
+   
+    var keys = d3.map(dataInitial, function(d){return(d.Accident_Severity)}).keys()
+        
+    //console.log(d3.map(dataInitial, function(d){return(d.Accident_Severity)}))
+       
+    var colorScale = d3.scale.ordinal()
+                        .domain(keys)
+                        .range(["#800000","	#FF6666","#FFCCCC"])
+
+// Add one dot in the legend for each name.
+    svg.selectAll("mydots")
+            .data(["High","Medium","Low"])
+            .enter()
+            .append("circle")
+            .attr("cx", 100)
+            .attr("cy", function(d,i){ return 100 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+            .attr("r", 8)
+            .style("fill", function(d){ return colorScale(d)})
+            .on('mouseover', function(d) {
+               x= d3.selectAll("circle")
+                    .transition()
+                    .duration('50')
+                    .attr('opacity', '.2');
+
+                d3.select(this)
+                    .transition()
+                    .duration('50')
+                    .attr('opacity', '1');
+                
+               console.log(x)
+
+                var count1 = 0;
+                var count2=0;
+                var count3=0;
+
+                for (let index = 0; index < x._groups[0].length; index++) {
+                    let element = x._groups[0][index].__data__.Accident_Severity
+                    
+                    if (element === "1") {  
+                        const f = x._groups[0][index]
+                        console.log(element) 
+                       
+                        d3.selectAll(f)
+                        .transition()
+                        .duration('50')
+                        .attr('opacity', '3')
+
+                        count1 = count1 + 1;
+                    }
+                    if (element === "2") {   
+                        const f = x._groups[0][index]
+                        d3.selectAll(f)
+                        .transition()
+                        .duration('50')
+                        .attr('opacity', '3')
+
+                        count2 = count2 + 1;
+                    }
+                    if (element === "3") {   
+                        const f = x._groups[0][index]
+                        d3.selectAll(f)
+                        .transition()
+                        .duration('50')
+                        .attr('opacity', '3')
+
+                        count3 = count3 + 1;
+                    }
+                }
+                console.log(count1)
+                console.log(count2)
+                console.log(count3)
+            })
+            .on('mouseout', function(d) {
+            d3.selectAll("circle")
+                .transition()
+                .duration('50')
+                .attr('opacity', '1')
+            })
+
+// Add one dot in the legend for each name.
+    svg.selectAll("mylabels")
+            .data(["High","Medium","Low"])
+            .enter()
+            .append("text")
+                .attr("x", 120)
+                .attr("y", function(d,i){ return 100 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+                .style("fill", function(d){ return "#00000"})
+                .text(function(d){ return d})
+                .attr("text-anchor", "left")
+                .style("alignment-baseline", "middle")
+
+    
+    var Tooltip = d3.select('body')
+            .append('div')
+            .attr('id', 'tooltip')
+            .attr('style', 'position: absolute; opacity: 0;')
+                        .style("background-color", "white")
+                        .style("border", "solid")
+                        .style("border-width", "2px")
+                        .style("border-radius", "5px")
                
 
   // Three function that change the tooltip when user hover / move / leave a cell
@@ -80,38 +167,43 @@ var svg = d3.select("#geometry")
   }
 
 
-        var geometry = svg.selectAll("circle")
-            .data(dataInitial)
-            .enter()
-            .append("circle")
-            .attr("cx", function(d) {
-                    return projection([d.Longitude, d.Latitude])[0];
-            })
-            .attr("cy", function(d) {
-                    return projection([d.Longitude, d.Latitude])[1];
-            })
-            .style("stroke", "none")
-      .style("opacity", 0.8)
-            .on("mouseover", mouseover)
-            .on("mousemove", mousemove)
-            .on("mouseleave", mouseleave)
-            .attr("r", 2)
-            
-            .style("fill", function(d){return colorScale(d.Accident_Severity)})
-            .style("stroke-width", 5)
-           
-      
+    var geometry = svg.selectAll("circle")
+                        .data(dataInitial)
+                        .enter()
+                        .append("circle")
+                        .attr("cx", function(d) {
+                                return projection([d.Longitude, d.Latitude])[0];
+                        })
+                        .attr("cy", function(d) {
+                                return projection([d.Longitude, d.Latitude])[1];
+                        })
+                        .style("stroke", "none")
+                    .style("opacity", 1)
+                        .on("mouseover", mouseover)
+                        .on("mousemove", mousemove)
+                        .on("mouseleave", mouseleave)
+                        .attr("r", 2)
+                        .style("fill", function(d){return colorScale(d.Accident_Severity)})
+                        .style("stroke-width", 5)
+                        .call(d3.zoom().on("zoom", function () {
+                            svg.attr("transform", d3.event.transform)
+                         })).append("g")
+
+
+                       
         
-            
-            var zoom = d3.behavior.zoom()
-            .on("zoom",function() {
-                svg.attr("transform","translate("+ 
-                    d3.event.translate.join(",")+")scale("+d3.event.scale+")");
-                svg.selectAll("circle")
-                    .attr("d", path.projection(projection));
-                svg.selectAll("path")  
-                    .attr("d", path.projection(projection));   });
-                    svg.call(zoom)
+    // var zoom = d3.behavior.zoom()
+    //             .on("zoom",function() {
+    //                 svg.attr("transform","translate("+ 
+    //                     d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+    //                 svg.selectAll("circle")
+    //                     .attr("d", path.projection(projection));
+    //                 svg.selectAll("path")  
+    //                     .attr("d", path.projection(projection));   });
+    //                     svg.call(zoom)
+    
+       
+      
 
 
     function update(selectedOption,Accident_year){
@@ -122,142 +214,123 @@ var svg = d3.select("#geometry")
          
                
                 var colorScale = d3.scale.ordinal()
-                                .domain(keys)
-                                .range(["	#9FE2BFF","	#009E60","#00FF7F"])
+                        .domain(keys)
+                        .range(["#800000","	#FF6666","#FFCCCC"])
                 
         
-        
-     var Tooltip = d3.select('body')
-     .append('div')
-     .attr('id', 'tooltip')
-     .attr('style', 'position: absolute; opacity: 0;')
-                .style("background-color", "white")
-                .style("border", "solid")
-                .style("border-width", "2px")
-                .style("border-radius", "5px")
-               
+                    // Add one dot in the legend for each name.
+                svg.selectAll("mydots")
+                        .data(["High","Medium","Low"])
+                        .enter()
+                        .append("circle")
+                        .attr("cx", 100)
+                        .attr("cy", function(d,i){ return 100 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+                        .attr("r", 8)
+                        .style("fill", function(d){ return colorScale(d)})
+                        .on('mouseover', function(d) {
+                            d3.selectAll("circle")
+                                .transition()
+                                .duration('50')
+                                .attr('opacity', '0');
+
+                            d3.select(this)
+                                .transition()
+                                .duration('50')
+                                .attr('opacity', '1');
+                            
+                            var x = d3.selectAll("circle")
+
+                            var count = 0;
+                            for (let index = 0; index < x._groups[0].length; index++) {
+                                let element = x._groups[0][index].__data__.Accident_Severity
+                                
+                                if (element === "2") {   
+                                    const f = x._groups[0][index]
+                                    d3.select(f)
+                                    .transition()
+                                    .duration('50')
+                                    .attr('opacity', '3')
+
+                                    count = count + 1;
+                                }
+                            }
+                            console.log(count)
+                        })
+                .on('mouseout', function(d) {
+                            d3.selectAll("circle")
+                                .transition()
+                                .duration('50')
+                                .attr('opacity', '1')
+                            })
+                var Tooltip = d3.select('body')
+                            .append('div')
+                            .attr('id', 'tooltip')
+                            .attr('style', 'position: absolute; opacity: 0;')
+                                        .style("background-color", "white")
+                                        .style("border", "solid")
+                                        .style("border-width", "2px")
+                                        .style("border-radius", "5px")
+                        
 
   // Three function that change the tooltip when user hover / move / leave a cell
-  var mouseover = function(d) {
-                Tooltip
-                .style("opacity", 1)
-                d3.select(this)
-                .style("stroke", "black")
-                .style("opacity", 1)
-  }
-  var mousemove = function(d) {
-                Tooltip
-                .html("Longitude-"+d.Longitude+"<br> Latitude-"+d.Latitude+"<br> Accident Severity-"+d.Accident_Severity+"<br> Number of Vehicles-"+d.Number_of_Vehicles+
-                "<br>Number of Casualties-"+d.Number_of_Casualties+"<br> Date-"+d.Date+"<br> Day of Week-"+d.Day_of_Week+"<br>Time-"+d.Time)
-                .style("left", (d3.mouse(this)[0]+70) + "px")
-                .style("top", (d3.mouse(this)[1]) + "px")
-  }
-  var mouseleave = function(d) {
-                Tooltip
-                    .style("opacity", 0)
-                d3.select(this)
-                    .style("stroke", "none")
-                    .style("opacity", 0.8)
-  }
+                var mouseover = function(d) {
+                                Tooltip
+                                .style("opacity", 1)
+                                d3.select(this)
+                                .style("stroke", "black")
+                                .style("opacity", 1)
+                }
+                var mousemove = function(d) {
+                                Tooltip
+                                .html("Longitude-"+d.Longitude+"<br> Latitude-"+d.Latitude+"<br> Accident Severity-"+d.Accident_Severity+"<br> Number of Vehicles-"+d.Number_of_Vehicles+
+                                "<br>Number of Casualties-"+d.Number_of_Casualties+"<br> Date-"+d.Date+"<br> Day of Week-"+d.Day_of_Week+"<br>Time-"+d.Time)
+                                .style("left", (d3.mouse(this)[0]+70) + "px")
+                                .style("top", (d3.mouse(this)[1]) + "px")
+                }
+                var mouseleave = function(d) {
+                                Tooltip
+                                    .style("opacity", 0)
+                                d3.select(this)
+                                    .style("stroke", "none")
+                                    .style("opacity", 0.8)
+                }
 
                 var geometry = svg.selectAll("circle")
-                    .data(data)
-                    .enter()
-                    .append("circle")
-                    .attr("cx", function(d) {
-                            return projection([d.Longitude, d.Latitude])[0];
-                    })
-                    .attr("cy", function(d) {
-                            return projection([d.Longitude, d.Latitude])[1];
-                    })
-                    .style("stroke", "none")
-      .style("opacity", 0.8)
-            .on("mouseover", mouseover)
-            .on("mousemove", mousemove)
-            .on("mouseleave", mouseleave)
-                    .attr("r", 2)
-                    
-                    .attr("fill", function(d){return colorScale(d.Accident_Severity)})
-                
-                    var zoom = d3.behavior.zoom()
-                    .on("zoom",function() {
-                        svg.attr("transform","translate("+ 
-                            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
-                        svg.selectAll("circle")
-                            .attr("d", path.projection(projection));
-                        svg.selectAll("path")  
-                            .attr("d", path.projection(projection));   });
-                            svg.call(zoom)
-                    
-                    
+                                .data(data)
+                                .enter()
+                                .append("circle")
+                                .attr("cx", function(d) {
+                                        return projection([d.Longitude, d.Latitude])[0];
+                                })
+                                .attr("cy", function(d) {
+                                        return projection([d.Longitude, d.Latitude])[1];
+                                })
+                                .style("stroke", "none")
+                                .style("opacity", 0.8)
+                                .on("mouseover", mouseover)
+                                .on("mousemove", mousemove)
+                                .on("mouseleave", mouseleave)
+                                .attr("r", 2)
+                                
+                                .attr("fill", function(d){return colorScale(d.Accident_Severity)})
                             
-                        }) 
-                        svg.selectAll("circle").remove();       
+                var zoom = d3.behavior.zoom()
+                                    .on("zoom",function() {
+                                        svg.attr("transform","translate("+ 
+                                            d3.event.translate.join(",")+")scale("+d3.event.scale+")");
+                                        svg.selectAll("circle")
+                                            .attr("d", path.projection(projection));
+                                        svg.selectAll("path")  
+                                            .attr("d", path.projection(projection));   });
+                                            svg.call(zoom)
+                                    
+                                    
+                                                
+                                            }) 
+                svg.selectAll("circle").remove();       
     }
     
        
-                
-        //             dataInitial = data.filter(d => d.Year === years[1])
-        //             console.log(dataInitial)
-        //             var keys = d3.map(data, function(d){return(d.Accident_Severity)}).keys()
-                    
-                    
-        //             var colorScale = d3.scale.ordinal()
-        //                             .domain(keys)
-        //                             .range(["	#9FE2BFF","	#009E60","#00FF7F"])
-                    
-            
-            
-        //             geometry.selectAll("circle")
-        //                 .data(dataInitial)
-        //                 .transition()
-                        
-        //                 .attr("cx", function(d) {
-        //                         return projection([d.Longitude, d.Latitude])[0];
-        //                 })
-        //                 .attr("cy", function(d) {
-        //                         return projection([d.Longitude, d.Latitude])[1];
-        //                 })
-        //                 .attr("r", 2)
-                        
-        //                 .attr("fill", function(d){return colorScale(d.Accident_Severity)})
-                      
-
-        //     }
-        //     if(selectedOption=="2007"){
-              
-        //       dataInitial = data.filter(d => d.Year === years[2])
-        //       console.log(dataInitial)
-        //       var keys = d3.map(data, function(d){return(d.Accident_Severity)}).keys()
-              
-              
-        //       var colorScale = d3.scale.ordinal()
-        //                       .domain(keys)
-        //                       .range(["	#9FE2BFF","	#009E60","#00FF7F"])
-              
-      
-      
-        //       geometry.transition()
-        //           .data(dataInitial)
-                  
-                  
-        //           .attr("cx", function(d) {
-        //                   return projection([d.Longitude, d.Latitude])[0];
-        //           })
-        //           .attr("cy", function(d) {
-        //                   return projection([d.Longitude, d.Latitude])[1];
-        //           })
-        //           .attr("r", 2)
-                  
-        //           .attr("fill", function(d){return colorScale(d.Accident_Severity)})
-                
-
-        //     }
-        //     if(selectedOption=="2005"){
-        //         console.log(selectedOption)
-        //         update(selectedOption,"Accidents_2005.csv")
-        //     }
-        // })
     
 
         
@@ -299,7 +372,7 @@ var svg = d3.select("#geometry")
 
 
 
-
+        var pie_data =  data.filter(function(d){ return d.Days != "" })
 
 // On click Listener
 
@@ -308,37 +381,15 @@ var svg = d3.select("#geometry")
         var selectedOption = d3.select(this).property("value")
         // run the updateChart function with this selected option
        
-        if(selectedOption==2006){
-             update(selectedOption,"Accidents_2006.csv")
-       console.log(selectedOption)
-
-
-     // Barchart onclick listner for 2006 year
-     var maxSum=d3.max(data, function(d) { return d.Casualities_2006; } );
-     yScale.domain([
-                   0,maxSum
-               ])
-                
-     var yAxis = d3.axisLeft(yScale);
-     
-     changing_axis.transition().duration(1000).call(yAxis);
-     
-     bars.transition() 
-         .attr("x", function(d) { return xScale(d.Days); })
-         .attr("y", function(d) { return yScale(d.Casualities_2006); })
-         .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2006); })
-         .attr("width", d => xScale.bandwidth())
-         .attr("fill", "steelblue")
-             
-    }
-    if(selectedOption==2005){
+          if(selectedOption==2005){
+        //update Geometry Chart
     update(selectedOption,"Accidents_2005.csv")
-    console.log(selectedOption)
+
 
     //Barchart onClick Listner for 2005 Year
 
 
-     // Barchart onclick listner for 2006 year
+     
      var maxSum=d3.max(data, function(d) { return d.Casualities_2005; } );
      yScale.domain([
                    0,maxSum
@@ -348,16 +399,125 @@ var svg = d3.select("#geometry")
      
      changing_axis.transition().duration(1000).call(yAxis);
      
-     bars.transition() 
-         .attr("x", function(d) { return xScale(d.Days); })
-         .attr("y", function(d) { return yScale(d.Casualities_2005); })
-         .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2005); })
-         .attr("width", d => xScale.bandwidth())
-         .attr("fill", "steelblue")
+     bars.on('mouseover', function(d) {
+            d3.selectAll("rect")
+                .transition()
+                .duration('50')
+                .attr('opacity', '.5');
+
+            d3.select(this)
+                .transition()
+                .duration('50')
+                .attr('opacity', '1');
+            
+                tooltipbar.html(`Number of Casualities: `+ d.Casualities_2005)
+                .style('visibility', 'visible');
+        })
+            .on('mousemove', function () {
+                tooltipbar.style('top', d3.event.pageY + 10 + 'px')
+                        .style('left', d3.event.pageX + 10 + 'px');
+            })
+            .on('mouseout', function(d) {
+            d3.selectAll("rect")
+                .transition()
+                .duration('50')
+                .attr('opacity', '1')
+            
+                tooltipbar.html(``).style('visibility', 'hidden');
+            })
+            .transition() 
+                .attr("x", function(d) { return xScale(d.Days); })
+                .attr("y", function(d) { return yScale(d.Casualities_2005); })
+                .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2005); })
+                .attr("width", d => xScale.bandwidth())
+                .attr('fill', function(d){ return(color_bar(d.Days)) })
+
+
+
+         var data_2005={}
+         pie_data.map(d => {
+             data_2005[d["Days"]] = d["Casualities_2005"];
+             return data_2005;   
+         });
+         update_piechart(data_2005)
+              
 
    
     }
+
+
+    if(selectedOption==2006){
+        //update Geometry Chart
+         update(selectedOption,"Accidents_2006.csv")
+
+
+
+ // Barchart onclick listner for 2006 year
+ var maxSum=d3.max(data, function(d) { return d.Casualities_2006; } );
+ yScale.domain([
+               0,maxSum
+           ])
+            
+ var yAxis = d3.axisLeft(yScale);
+ 
+ changing_axis.transition().duration(1000).call(yAxis);
+ 
+ bars.on('mouseover', function(d) {
+        d3.selectAll("rect")
+            .transition()
+            .duration('50')
+            .attr('opacity', '.5');
+
+        d3.select(this)
+            .transition()
+            .duration('50')
+            .attr('opacity', '1');
+        
+            tooltipbar.html(`Number of Casualities: `+ d.Casualities_2006)
+            .style('visibility', 'visible');
+    })
+        .on('mousemove', function () {
+            tooltipbar.style('top', d3.event.pageY + 10 + 'px')
+                    .style('left', d3.event.pageX + 10 + 'px');
+        })
+        .on('mouseout', function(d) {
+        d3.selectAll("rect")
+            .transition()
+            .duration('50')
+            .attr('opacity', '1')
+        
+            tooltipbar.html(``).style('visibility', 'hidden');
+        })
+        .transition() 
+            .attr("x", function(d) { return xScale(d.Days); })
+            .attr("y", function(d) { return yScale(d.Casualities_2006); })
+            .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2006); })
+            .attr("width", d => xScale.bandwidth())
+            .attr('fill', function(d){ return(color_bar(d.Days)) })
+            
+     
+
+
+
+     //Piechart onClick Listner for 2006 year
+
+
+    var data_2006={}
+    pie_data.map(d => {
+        data_2006[d["Days"]] = d["Casualities_2006"];
+        return data_2006;   
+    });
+    console.log(data_2006)
+    update_piechart(data_2006)
+         
+}
+
+
+
+
     if(selectedOption==2007){
+
+        //update Geometry Chart
     update(selectedOption,"Accidents_2007.csv")
 
 
@@ -372,12 +532,48 @@ var svg = d3.select("#geometry")
      
      changing_axis.transition().duration(1000).call(yAxis);
      
-     bars.transition() 
-         .attr("x", function(d) { return xScale(d.Days); })
-         .attr("y", function(d) { return yScale(d.Casualities_2007); })
-         .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2007); })
-         .attr("width", d => xScale.bandwidth())
-         .attr("fill", "steelblue")
+     bars.on('mouseover', function(d) {
+            d3.selectAll("rect")
+                .transition()
+                .duration('50')
+                .attr('opacity', '.5');
+
+            d3.select(this)
+                .transition()
+                .duration('50')
+                .attr('opacity', '1');
+            
+                tooltipbar.html(`Number of Casualities: `+ d.Casualities_2007)
+                .style('visibility', 'visible');
+        })
+            .on('mousemove', function () {
+                tooltipbar.style('top', d3.event.pageY + 10 + 'px')
+                        .style('left', d3.event.pageX + 10 + 'px');
+            })
+            .on('mouseout', function(d) {
+            d3.selectAll("rect")
+                .transition()
+                .duration('50')
+                .attr('opacity', '1')
+            
+                tooltipbar.html(``).style('visibility', 'hidden');
+            })
+            .transition() 
+                .attr("x", function(d) { return xScale(d.Days); })
+                .attr("y", function(d) { return yScale(d.Casualities_2007); })
+                .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.Casualities_2007); })
+                .attr("width", d => xScale.bandwidth())
+                .attr('fill', function(d){ return(color_bar(d.Days)) })
+
+
+
+         var data_2007={}
+         pie_data.map(d => {
+             data_2007[d["Days"]] = d["Casualities_2007"];
+             return data_2007;   
+         });
+         update_piechart(data_2007)
+         
     }
     })
 
@@ -407,7 +603,7 @@ var svg1 = d3.select("#barchart")
 
 var keys = d3.map(data, function(d){return(d.Day_week)}).keys()
 
-console.log(keys)
+
 var bar_data =  data.filter(function(d){ return d.Days != "" })
 var xScale = d3.scaleBand()
 .domain(
@@ -427,7 +623,9 @@ var yScale = d3.scaleLinear()
 ])
               .range([dimensions.height-dimensions.margin.bottom,dimensions.margin.top]);
 
-
+var color_bar = d3.scaleOrdinal()
+              .domain(["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday","Saturday"])
+              .range(d3.schemeDark2);
 
   var text = svg1
             .append("text")
@@ -437,27 +635,57 @@ var yScale = d3.scaleLinear()
             .attr("dx", "-.8em")
             .attr("dy", ".15em")
             .attr("font-family", "sans-serif")
-            .text("Number of Casuality based on day of week");
-
+           
+  var tooltipbar = d3
+                    .select('body')
+                    .append('div')
+                    .attr('class', 'd3-tooltip')
+                    .style('position', 'absolute')
+                    .style('z-index', '10')
+                    .style('visibility', 'hidden')
+                    .style('padding', '10px')
+                    .style('background', 'rgba(0,0,0,0.6)')
+                    .style('border-radius', '4px')
+                    .style('color', '#fff')
+                    .text('a simple tooltip');
 
   var bars=svg1.append("g")
               .selectAll("g")
               .data(data)
-              
               .enter()
               .append("rect")
               .attr("x", function(d) { return xScale(d.Days); })
               .attr("y", function(d) { return yScale(d[nameSelected]); })
               .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d[nameSelected]) })
               .attr("width", d => xScale.bandwidth())
-              .attr("fill", "steelblue")
-              .on("mouseover", function (d, i) {
-                d3.select(this).attr("stroke-width", 2).attr("fill", "red");
-               
-              })
-              .on("mouseout", function (d) {
-                d3.select(this).attr("stroke-width", "0").attr("fill","steelblue");
-              });
+              .attr('fill', function(d){ return(color_bar(d.Days)) })
+              .on('mouseover', function(d) {
+                d3.selectAll("rect")
+                    .transition()
+                    .duration('50')
+                    .attr('opacity', '.5');
+
+                d3.select(this)
+                    .transition()
+                    .duration('50')
+                    .attr('opacity', '1');
+                
+                    tooltipbar.html(`Number of Casualities: `+ d[nameSelected])
+                       .style('visibility', 'visible');
+            })
+            .on('mousemove', function () {
+                tooltipbar.style('top', d3.event.pageY + 10 + 'px')
+                          .style('left', d3.event.pageX + 10 + 'px');
+            })
+            .on('mouseout', function(d) {
+              d3.selectAll("rect")
+                .transition()
+                .duration('50')
+                .attr('opacity', '1')
+              
+                tooltipbar.html(``).style('visibility', 'hidden');
+            })
+    console.log(bars)
 
 
 
@@ -476,67 +704,129 @@ var yScale = d3.scaleLinear()
 
 
 
+                  svg1.append("text")
+                  .attr("class", "x label")
+                  .attr("text-anchor", "end")
+                  .attr("x", dimensions.width-200)
+                  .attr("y", dimensions.height - 6)
+                  .text("Days of the Week");
+// Y axis label:
+svg1.append("text")
+.attr("class", "y label")
+.attr("text-anchor", "end")
+.attr("x", -100)
+.attr("y", -2)
+.attr("dy", ".75em")
+.attr("transform", "rotate(-90)")
+.text("Number of Casualities per Day");
+
+
+
 //Piechart
 
-    var pie_data =  data.filter(function(d){ return d.Days != "" })
-//     console.log(pie_data)
-//    Casualities_2005= pie_data.map(function (d) {
-//         return d.Casualities_2005;
-//       })
+
+
+
+// set the dimensions and margins of the graph
+var width_pie = 450
+    height_pie = 450
+    margin_pie = 40
+    
+
+// The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
+var radius = Math.min(width_pie, height_pie) / 2 - margin_pie
+
+// append the svg object to the div called 'my_dataviz'
+var svg3 = d3.select("#Line")
+     .append("svg")
+    .attr("width", width_pie)
+    .attr("height", height_pie)
+  .append("g")
+    .attr("transform", "translate(" + width_pie / 2 + "," + height_pie / 2 + ")");
+
+// create 2 data_set
+
+
+var data11={}
+pie_data.map(d => {
+    data11[d["Days"]] = d["Vehicles_2005"];
+    return data11;   
+});
+
+// set the color scale
+var color_pie = d3.scaleOrdinal()
+  .domain(["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday","Saturday"])
+  .range(d3.schemeDark2);
+
+// A function that create / update the plot for a given variable:
+function update_piechart(data) {
+
+  // Compute the position of each group on the pie:
+  var pie = d3.pie()
+    .value(function(d) {return d.value; })
+    .sort(function(a, b) {  return d3.ascending(a.key, b.key);} ) // This make sure that group order remains the same in the pie chart
+  var data_ready = pie(d3.entries(data))
+  console.log(data_ready)
+
+  // map to data
+  var u = svg3.selectAll('path')
+    .data(data_ready)
+    .enter()
+    .append('path')
+    .on('mouseover', function(d) {
+        d3.selectAll("path")
+            .transition()
+            .duration('50')
+            .attr('opacity', '.5');
+
+        d3.select(this)
+            .transition()
+            .duration('50')
+            .attr('opacity', '1');
+        
+            tooltipbar.html(`Number of vehicle Involved: `+ d.data.value)
+               .style('visibility', 'visible');
+
+    })
+    .on('mousemove', function () {
+        tooltipbar.style('top', d3.event.pageY + 10 + 'px')
+                  .style('left', d3.event.pageX + 10 + 'px');
+    })
+    .on('mouseout', function(d) {
+      d3.selectAll("path")
+        .transition()
+        .duration('50')
+        .attr('opacity', '1')
       
-// Days=pie_data.map(function (d) {
-//     return d.Days;
-//   })
-  data_2005=pie_data.map(function (d) {
-    return{
-    Days:d.Days,
-    Casualities_2005:d.Casualities_2005
-}})
-  console.log(data_2005)
-  var text = "";
+        tooltipbar.html(``).style('visibility', 'hidden');
+    })
+    .transition()
+    .duration(1000)
+    .attr('d', d3.arc() 
+      .innerRadius(0)
+      .outerRadius(radius)
+    )
+    .attr('fill', function(d){ return(color_pie(d.data.key)) })
+   
+    .attr("stroke", "white")
+    .style("stroke-width", "2px")
+    .style("opacity", 1)
 
-  var width_pie = 500;
-  var height_pie = 500;
-  var thickness_pie = 40;
-  var duration = 750;
+   
+   
+    
+    
+   
+    
+   
 
-  var radius = Math.min(width_pie, height_pie) / 2;
-  var color = d3.scaleOrdinal()
-                .domain(data_2005.map(function (d) {
-                    return d.Days;
-                  }))
-                .range(["#FFBF00", "#FF7F50", "#6495ED", "#008000", "#DE3163","#DE3134","Ef32455"]);
+ 
 
+}
 
-    var svg3 = d3.select("#Line")
-        .attr("width", width_pie)
-        .attr("height", height_pie)
-    .append("g")
-        .attr("transform", "translate(" + width_pie / 2 + "," + height_pie / 2 + ")");
+// Initialize the plot with the first dataset
+update_piechart(data11)
 
-  
-              var pie = d3.pie()
-              .value(function(d) {return d.Casualities_2005; })
-              .sort(function(a, b) { return d3.ascending(a.Days, b.Days);} ) // This make sure that group order remains the same in the pie chart
-            var data_ready = pie(d3.entries(data_2005))
-          
-            // map to data
-            var u = svg3.selectAll("path1")
-              .data(data_ready)
-          
-            // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
-            u
-              .enter()
-              .append('path1')
-              .merge(u)
-              .attr('d', d3.arc()
-                .innerRadius(0)
-                .outerRadius(radius)
-              )
-              .attr('fill', function(d){ return(color(d.Days)) })
-              .attr("stroke", "white")
-              .style("stroke-width", "2px")
-              .style("opacity", 1)
           
     })  // uk.json ends
 
@@ -545,132 +835,4 @@ var yScale = d3.scaleLinear()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// //Linechart
-
-
-
-
-
-// var dimensions={
-//     width:800,
-//     height:800,
-//     margin:{
-//       top: 10,
-//       bottom: 50,
-//       right: 10,
-//       left: 50
-//   }
-// }
-
-
-
-// var parseDate = d3.time.format("%d-%b-%y").parse;
-
-// var svg = d3.select("#Line")
-//         .attr("width", dimensions.width)
-//         .attr("height", dimensions.height);
-// var xScale = d3.scaleTime().range([dimensions.margin.left,dimensions.width-dimensions.margin.right]);
-// var yScale = d3.scaleLinear().range([dimensions.height-dimensions.margin.bottom,dimensions.margin.top]);
-
-// var xAxisGen = d3.axisBottom().scale(xScale)
-// var xAxis = svg.append("g")
-//     .call(xAxisGen)
-//     .style("transform", `translateY(${dimensions.height-dimensions.margin.bottom}px)`)
-
-// var yAxisGen = d3.axisLeft().scale(yScale)
-// var yAxis = svg.append("g")
-//     .call(yAxisGen)
-//     .style("transform", `translateX(${dimensions.margin.left}px)`)
-
-// var valueline = d3.line()
-//                 .x(function(d) { return xScale(d.Date); })
-//                 .y(function(d) { return yScale(d.Number_of_Casualties); });
-
-     
-// d3.csv("Accidents_2005.csv", function(error, data) {
-//     data.forEach(function(d) {
-//         d.Date = parseDate(d.Date);
-//         d.Number_of_Casualties = +d.Number_of_Casualties;
-//     });
-//     xScale.domain(data.map(function (d) {
-//         return d.Date;
-//       }));
-//     yScale.domain([0, d3.max(data, function(d) { return d.Number_of_Casualties; })]);
-
-//     svg.append("path")
-//       .data(data)
-//       .attr("fill","red")
-//       .attr("stroke", "red")
-//       .attr("stroke-width", 15)
-//       .attr("d", valueline(data))
-       
-
-  
-
-
-
-
-// })
-
-// d3.csv("accidents_2005_to_2007.csv",function(data) {
-
-    
-  
-  
-             
-//   var databyyear = d3.nest()
-//             .key(function(d) { return d.Year;})
-//             .rollup(function(d) { 
-//                   return d3.sum(d, function(g) {return g.Number_of_Casualties; });
-//                   })
-//             .sortKeys(d3.ascending)
-//             .entries(data);
-//       console.log(databyyear)
-  
-  
-//   var keys = d3.map(data, function(d){return(d.Year)}).keys()
-  
-//   var xScale = d3.scaleBand()
-//      .domain(keys)
-//      .range([dimensions.margin.left,dimensions.width-dimensions.margin.right])
-    
-//   var maxSum = d3.max(databyyear, function(d){
-//                return +d.value;
-//                })
-//     console.log(maxSum)
-    
-    
-//   var yScale = d3.scaleLinear()
-//       .domain([0,maxSum])
-//       .range([dimensions.height-dimensions.margin.bottom,dimensions.margin.top]);
-    
-  
-//   svg.append("path")
-//       .datum(databyyear)
-//       .attr("fill","red")
-//       .attr("stroke", "red")
-//       .attr("stroke-width", 15)
-//       .attr("d", d3.line()
-//         .x(function(d) { return xScale(d.key) })
-//         .y(function(d) { return yScale(d.value) })
-//         )
-//         .attr("height", function(d) { return dimensions.height-dimensions.margin.bottom - yScale(d.value); })
-//         .attr("width", d => xScale.bandwidth())
-//   })
  
