@@ -436,7 +436,7 @@ d3.json("uk.json", function(error, uk) {
 
          var data_2005={}
          pie_data.map(d => {
-             data_2005[d["Days"]] = d["Casualities_2005"];
+             data_2005[d["Days"]] = d["Vehicles_2005"];
              return data_2005;   
          });
          update_piechart(data_2005)
@@ -504,7 +504,7 @@ d3.json("uk.json", function(error, uk) {
 
     var data_2006={}
     pie_data.map(d => {
-        data_2006[d["Days"]] = d["Casualities_2006"];
+        data_2006[d["Days"]] = d["Vehicles_2006"];
         return data_2006;   
     });
     console.log(data_2006)
@@ -569,7 +569,7 @@ d3.json("uk.json", function(error, uk) {
 
          var data_2007={}
          pie_data.map(d => {
-             data_2007[d["Days"]] = d["Casualities_2007"];
+             data_2007[d["Days"]] = d["Vehicles_2007"];
              return data_2007;   
          });
          update_piechart(data_2007)

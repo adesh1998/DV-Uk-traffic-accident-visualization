@@ -1,3 +1,7 @@
+body{
+  background-color: rgb(198, 219, 226);
+}
+
 #accident {
     width: 200px;
     margin: 10px;
